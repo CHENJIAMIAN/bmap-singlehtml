@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta name="viewport" content="initial-scale=1.0, user-scalable=no" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Baidu Map </title>
+    <style type="text/css">
+        html {
+            height: 100%
+        }
+
+        body {
+            height: 100%;
+            margin: 0px;
+            padding: 0px
+        }
+
+        #container {
+            height: 100%
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <span id="results"></span>
+    <script type="text/javascript" src="http://api.map.baidu.com/api?v=3.0&ak=F03SBpMLu8KnlpF83T6vDu9YHk8LNVxB">
+    </script>
+
+    <script>
+        var map = new BMap.Map("container");          // 创建地图实例  
+        var point = new BMap.Point(116.404, 39.915);  // 创建点坐标  
+        map.centerAndZoom(point, 10);                 // 初始化地图，设置中心点坐标和地图级别  
+        map.enableScrollWheelZoom(true);     //开启鼠标滚轮缩放
+        // map.setMapStyleV2({
+        //     styleId: 'f40fce0fe0842a7ce0763c636be7e9b9'
+        // });
+
+        var opts = { type: BMAP_NAVIGATION_CONTROL_SMALL }
+        map.addControl(new BMap.NavigationControl(opts));
+        map.addControl(new BMap.ScaleControl());
+        map.addControl(new BMap.OverviewMapControl());
+        map.addControl(new BMap.MapTypeControl());
+        map.setCurrentCity("北京"); // 仅当设置城市信息时，MapTypeControl的切换功能才能可用   
+
+        // 定义一个控件类，即function    
+        function ZoomControl() {
+            // 设置默认停靠位置和偏移量  
+            this.defaultAnchor = BMAP_ANCHOR_TOP_LEFT;
+            this.defaultOffset = new BMap.Size(10, 10);
+        }
+        // 通过JavaScript的prototype属性继承于BMap.Control   
+        ZoomControl.prototype = new BMap.Control();
+        // 自定义控件必须实现initialize方法，并且将控件的DOM元素返回   
+        // 在本方法中创建个div元素作为控件的容器，并将其添加到地图容器中   
+        ZoomControl.prototype.initialize = function (map) {
+            // 创建一个DOM元素   
+            var div = document.createElement("div");
+            // 添加文字说明    
+            div.appendChild(document.createTextNode("放大2级"));
+            // 设置样式    
+            div.style.cursor = "pointer";
+            div.style.border = "1px solid gray";
+            div.style.backgroundColor = "white";
+            // 绑定事件，点击一次放大两级    
+            div.onclick = function (e) {
+                map.zoomTo(map.getZoom() + 2);
+            }
+            // 添加DOM元素到地图中   
+            map.getContainer().appendChild(div);     // 将DOM元素返回  
+            // 创建控件实例    
+            var myZoomCtrl = new ZoomControl();
+            // 添加到地图当中    
+            map.addControl(myZoomCtrl);
+            return div;
+        }
+
+        // var marker = new BMap.Marker(point);        // 创建标注    
+        // map.addOverlay(marker);                     // 将标注添加到地图中 
+
+        // 随机向地图添加10个标注    
+        var bounds = map.getBounds();
+        var lngSpan = bounds.maxX - bounds.minX;
+        var latSpan = bounds.maxY - bounds.minY;
+        for (var i = 0; i < 10; i++) {
+            var point = new BMap.Point(bounds.getCenter().lng + (Math.random() * 0.3),
+                bounds.getCenter().lat + (Math.random() * 0.3));
+            addMarker(point, i);
+        }
+
+        function addMarker(point, index) {  // 创建图标对象   
+            var myIcon = new BMap.Icon("markers.png", new BMap.Size(23, 25), {
+                // 指定定位位置。   
+                // 当标注显示在地图上时，其所指向的地理位置距离图标左上    
+                // 角各偏移10像素和25像素。您可以看到在本例中该位置即是   
+                // 图标中央下端的尖角位置。    
+                anchor: new BMap.Size(10, 25),
+                // 设置图片偏移。   
+                // 当您需要从一幅较大的图片中截取某部分作为标注图标时，您   
+                // 需要指定大图的偏移位置，此做法与css sprites技术类似。    
+                imageOffset: new BMap.Size(0, 0)   // 设置图片偏移    
+            });
+            // 创建标注对象并添加到地图   
+            var marker = new BMap.Marker(point, { icon: myIcon });
+            marker.addEventListener("click", function () {
+                alert("您点击了标注");
+            });
+            marker.enableDragging();
+            marker.addEventListener("dragend", function (e) {
+                alert("当前位置：" + e.point.lng + ", " + e.point.lat);
+            })
+            map.addOverlay(marker);
+        }
+
+        //检索POI方法
+        var local = new BMap.LocalSearch(map, {
+            renderOptions: { map: map, panel: "results" }
+        });
+        local.search("中关村");
+
+    </script>
+
+</body>
+
+</html>
